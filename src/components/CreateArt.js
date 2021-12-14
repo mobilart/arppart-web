@@ -1,0 +1,182 @@
+import React, { useState, useEffect } from "react"
+import { useRouter } from "next/router"
+import Image from "next/image"
+import axios from "axios"
+import FileSaver from "file-saver"
+import ReactLoading from "react-loading"
+import ReactTooltip from "react-tooltip"
+import { useSnackbar } from "react-simple-snackbar"
+import pencil from "../../public/assets/pencil.svg"
+import download from "../../public/assets/download.svg"
+import upload from "../../public/assets/upload.svg"
+import logout from "../../public/assets/white-logout.svg"
+import styles from "../styles/pages/projectsIds.module.css"
+
+const { NEXT_PUBLIC_API_URL } = process.env
+export default function Projects({ haveProject }) {
+	const router = useRouter()
+	const [openSnackbar] = useSnackbar()
+	const [title, setTitle] = useState("")
+	const [project, setProject] = useState({})
+	const [file, setFile] = useState(null)
+	const [isLoading, setIsLoading] = useState(false)
+
+	useEffect(async () => {
+		try {
+			if (!router.isReady) return
+			const { projectId, tileId } = router.query
+			const userData = JSON.parse(localStorage.getItem("userData"))
+			const config = { headers: { "Content-Type": "application/json", "Authorization": `Bearer ${userData.accessToken}` } }
+			const path = haveProject ? "/api/v1/arpp-art/project/current-tile" : `/api/v1/arpp-art/project/${projectId}/tile/${tileId}`
+			const response = await axios.get(`${NEXT_PUBLIC_API_URL}${path}`, config)
+			setProject(response.data)
+			setTitle(response.data.title)
+		} catch (error) {
+			if (error.response?.body?.responseCode == "-9001") router.push("/projects?responseCode=-9001")
+			router.push("/?error=true")
+		}
+	}, [router.isReady])
+
+	const downloadFile = async () => {
+		try {
+			const { projectId, tileId } = project
+			setIsLoading(true)
+			const userData = JSON.parse(localStorage.getItem("userData"))
+			const config = { headers: { "Authorization": `Bearer ${userData.accessToken}`, responseType: "blob" } }
+			const response = await fetch(`${NEXT_PUBLIC_API_URL}/api/v1/arpp-art/project/${projectId}/download/${tileId}`, config)
+			const blob = await response.blob()
+			FileSaver(blob, `project_${projectId}_template_tile_${tileId}.png`)
+			localStorage.setItem("userData", JSON.stringify({ ...userData, hasInProgressProject: true }))
+		} catch (error) {
+			if (error.response?.data) return openSnackbar(error.response.data.message)
+			openSnackbar("Error when try to access server, verify your network and contact your administrator.")
+			console.error(error)
+		} finally {
+			setIsLoading(false)
+		}
+	}
+
+	const uploadFile = async () => {
+		try {
+			if (!file) return openSnackbar("Please upload the file to proceed.")
+			setIsLoading(true)
+			const { projectId, tileId } = project
+			const userData = JSON.parse(localStorage.getItem("userData"))
+			const config = { headers: { "Content-Type": "application/json", "Authorization": `Bearer ${userData.accessToken}` } }
+			const formData = new FormData()
+			formData.append("file", file, `project_${projectId}_template_tile_${tileId}.png`)
+			await axios.put(`${NEXT_PUBLIC_API_URL}/api/v1/arpp-art/project/${projectId}/upload/${tileId}`, formData, config)
+			localStorage.setItem("userData", JSON.stringify({ ...userData, hasInProgressProject: false }))
+			router.push("/projects?success=true")
+		} catch (error) {
+			if (error.response?.status === 500) return openSnackbar("Internal error, please contact your administrator")
+			if (error.response?.data) return openSnackbar(error.response.data.message)
+			openSnackbar("Error when try to access server, verify your network and contact your administrator.")
+		} finally {
+			setIsLoading(false)
+		}
+	}
+
+	const updateTitle = async () => {
+		try {
+			const { projectId } = project
+			const userData = JSON.parse(localStorage.getItem("userData"))
+			const config = { headers: { "Content-Type": "application/json", "Authorization": `Bearer ${userData.accessToken}` } }
+			const response = await axios.put(`${NEXT_PUBLIC_API_URL}/api/v1/arpp-art/project/${projectId}?title=${title}`, {}, config)
+			openSnackbar("Project title changed.")
+			setProject({ ...project, title: response.data })
+			setTitle(response.data)
+		} catch (error) {
+			if (error.response?.status === 500) return openSnackbar("Internal error, please contact your administrator")
+			if (error.response?.data) return openSnackbar(error.response.data.message)
+			openSnackbar("Error when try to access server, verify your network and contact your administrator.")
+		}
+	}
+
+	const logoutUser = () => {
+		localStorage.setItem("userData", null)
+		router.push("/")
+	}
+
+	return (
+		<div className={styles.container}>
+			<ReactTooltip delayShow={1000} effect="solid" place="top" type="light" />
+			<header className={styles.header}>
+				<div />
+				<div>
+					<input
+						className={styles.title}
+						value={title}
+						onChange={(evt) => setTitle(evt.target.value)}
+						onBlur={(evt) => !evt.target.value ? setTitle(project.title) : null}
+						style={{width: `${title.length * 11 + 7}px`}}
+					/>
+					<Image alt="Pencil icon" className={styles["pencil-icon"]} src={pencil} data-tip="Edit project tile" onClick={updateTitle} />
+				</div>
+				<div className={styles.logout}>
+					<Image
+						alt="Logout icon"
+						data-tip="Logout"
+						src={logout}
+						onClick={logoutUser}
+					/>
+				</div>
+			</header>
+			<div className={styles.content}>
+				<div className={styles["tile-img-container"]}>
+					{project &&
+						<img
+							alt="Tile"
+							src={file ? URL.createObjectURL(file) : project.displayUrl}
+							className={styles["tile-img"]}
+						/>}
+					<p className={styles["counter-parts"]}>{project.currentSeq} of {project.tileCount}</p>
+				</div>
+
+				<div className={styles["art-container"]}>
+					<div className={styles["image-uploaded-container"]}>
+						{project.displayUrl && <img
+							src={project.minimapUrl}
+							width="100%"
+							height="100%"
+							alt={`project-id-${project.projectId}`}
+						/>}
+					</div>
+					<div className={styles["form-container"]}>
+						<div className={styles["download-upload-container"]}>
+							<Image
+								alt="Download button"
+								data-tip="Download tile"
+								className={styles["btn-container"]}
+								onClick={downloadFile}
+								type="file"
+								accept=".png"
+								src={download}
+							/>
+
+							<label htmlFor="file-input">
+								<Image
+									alt="Upload button"
+									data-tip="Upload tile"
+									className={styles["btn-container"]}
+									src={upload}
+								/>
+								<input id="file-input" type="file" className={styles["file-input"]} onChange={(event) => {if(event.target.files[0]) setFile(event.target.files[0])}} />
+							</label>
+						</div>
+
+						{/* <p className={styles["filename"]}>{file?.name}</p> */}
+
+						<div className={styles["unable-upload-container"]}>
+							{!file && <p className={styles["unable-upload"]}> Please re-upload with original PNG format and dimensions. </p>}
+						</div>
+
+						<button className={styles["done-btn"]} type="button" data-tip="Submit tile to project" onClick={uploadFile}>
+							{isLoading ? <ReactLoading className="loading" type="bubbles" color="#FFFFFF" /> : "Done"}
+						</button>
+					</div>
+				</div>
+			</div>
+		</div>
+	)
+}

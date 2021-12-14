@@ -1,0 +1,19 @@
+.forgot-password {
+  margin-bottom: 10%;
+}
+
+.forgot-password a {
+  color: #000000;
+  font: normal normal normal 11px/19px Roboto, sans-serif;
+  letter-spacing: 0px;
+  padding-left: 3px;
+  text-align: right;
+  text-decoration: none;
+}
+
+.login-error-msg {
+  text-align: center;
+  width: 118px;
+  position: initial;
+  margin-top: 8px;
+}
