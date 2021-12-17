@@ -21,8 +21,8 @@ export default function Projects({ path, title, haveProject }) {
 		try {
 			const { success } = router.query
 			if(success) {
-				openSnackbar("Success to upload file.")
-				router.replace("/projects")	
+				openSnackbar("Tile successfully uploaded.")
+				router.replace("/projects")
 			}
 			const userData = JSON.parse(localStorage.getItem("userData"))
 			if(userData.hasInProgressProject !== haveProject) return router.push("/")

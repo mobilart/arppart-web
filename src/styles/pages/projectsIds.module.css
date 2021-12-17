@@ -91,6 +91,10 @@
   object-fit: contain;
 }
 
+.tile-img-loading {
+  margin: 40vh auto 0;
+}
+
 .title {
   color: #FFF;
   background: none;
@@ -124,6 +128,13 @@
     flex-direction: row;
     justify-content: space-between;
     margin: 0 auto;
+  }
+
+  .tile-img {
+    width: 100%;
+    margin-top: 10vh;
+    max-height: 60vh;
+    object-fit: contain;
   }
 
   .tile-img-container {
