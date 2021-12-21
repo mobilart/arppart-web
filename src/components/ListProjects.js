@@ -12,7 +12,7 @@ import nextTile from "../../public/assets/next-tile.png"
 import styles from "../styles/pages/projects.module.css"
 
 const { NEXT_PUBLIC_API_URL } = process.env
-export default function Projects({ path, title, haveProject }) {
+export default function ListProjects({ path, title, haveProject }) {
 	const router = useRouter()
 	const [openSnackbar] = useSnackbar()
 	const [projects, setProjects] = useState([])
@@ -60,7 +60,7 @@ export default function Projects({ path, title, haveProject }) {
 		return (
 			<div className={styles.list}>
 				<div className={styles.item}>
-					<Link href={"/projects/my-tile"}>
+					<Link href={"/projects/current-tile"}>
 						<img
 							style={{"borderStyle": "solid"}}
 							layout="responsive"

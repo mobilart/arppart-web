@@ -6,22 +6,25 @@ import FileSaver from "file-saver"
 import ReactLoading from "react-loading"
 import ReactTooltip from "react-tooltip"
 import { useSnackbar } from "react-simple-snackbar"
+
+import Alert from "../components/Alert"
+import styles from "../styles/pages/projectsIds.module.css"
 import pencil from "../../public/assets/pencil.svg"
 import download from "../../public/assets/download.svg"
 import upload from "../../public/assets/upload.svg"
 import logout from "../../public/assets/white-logout.svg"
-import styles from "../styles/pages/projectsIds.module.css"
 
 const { NEXT_PUBLIC_API_URL } = process.env
 export default function Projects({ haveProject }) {
 	const router = useRouter()
 	const [openSnackbar] = useSnackbar()
 	const [title, setTitle] = useState("")
+	const [readonlyTitle, setReadonlyTitle] = useState(true)
 	const [project, setProject] = useState({})
 	const [file, setFile] = useState(null)
 	const [isLoading, setIsLoading] = useState(false)
 	const [fileError, setFileError] = useState(false)
-	// const [isNotAvailbleError, setIsNotAvailbleError] = useState(false)
+	const [isOpenedAlert, setIsOpenedAlert] = useState(false)
 
 	useEffect(async () => {
 		try {
@@ -35,7 +38,6 @@ export default function Projects({ haveProject }) {
 			setTitle(response.data.title)
 		} catch (error) {
 			if (error.response?.body?.responseCode == "-9001") router.push("/projects?responseCode=-9001")
-			// if (error.response?.body?.responseCode == "-3024") return setIsNotAvailbleError(true)
 			router.push("/?error=true")
 		}
 	}, [router.isReady])
@@ -52,7 +54,8 @@ export default function Projects({ haveProject }) {
 			FileSaver(blob, `project_${projectId}_template_tile_${tileId}.png`)
 			localStorage.setItem("userData", JSON.stringify({ ...userData, hasInProgressProject: true }))
 		} catch (error) {
-			console.error(error)
+			console.log(error.response)
+			if (error.responseCode == "-3023") return setIsOpenedAlert(true)
 			if (error.responseCode) return openSnackbar(error.message)
 			openSnackbar("Error when try to access server, verify your network and contact your administrator.")
 		} finally {
@@ -85,6 +88,25 @@ export default function Projects({ haveProject }) {
 		}
 	}
 
+	const editMode = () => {
+		return readonlyTitle
+			?<h1 className={styles.title}>{title}</h1>
+			:<input
+				value={title}
+				onChange={(evt) => setTitle(evt.target.value)}
+				onBlur={closeEditMode}
+				className={styles["title-input"]}
+				style={{width:`${title.length * 1.2}ch`, maxWidth: "50vw"}}
+				autoFocus
+			/>
+	}
+
+	const closeEditMode = (evt) => {
+		if(!evt.target.value || title === project.title) setTitle(project.title)
+		else updateTitle()
+		setReadonlyTitle(true)
+	}
+
 	const updateTitle = async () => {
 		try {
 			const { projectId } = project
@@ -107,94 +129,93 @@ export default function Projects({ haveProject }) {
 	}
 
 	return (
-		<div className={styles.container}>
-			<ReactTooltip delayShow={1000} effect="solid" place="top" type="light" />
-			<header className={styles.header}>
-				<div />
-				<div>
-					<input
-						className={styles.title}
-						value={title}
-						onChange={(evt) => setTitle(evt.target.value)}
-						onBlur={(evt) => !evt.target.value ? setTitle(project.title) : null}
-						style={{maxWidth: `${title.length * 11 + 7}px`}}
-					/>
-					<Image alt="Pencil icon" className={styles["pencil-icon"]} src={pencil} data-tip="Edit project tile" onClick={updateTitle} />
-				</div>
-				<div className={styles.logout}>
-					<Image
-						alt="Logout icon"
-						data-tip="Logout"
-						src={logout}
-						onClick={logoutUser}
-					/>
-				</div>
-			</header>
-			{!project.displayUrl ?
-				<ReactLoading className={styles["tile-img-loading"]} type="spinningBubbles" color="#FFFFFF" />
-				:
-				<div className={styles.content}>
-					<div className={styles["tile-img-container"]}>
-						{project &&
+		<>
+			{isOpenedAlert && <Alert setIsOpenedAlert={setIsOpenedAlert}/>}
+
+			<div className={styles.container}>
+				<ReactTooltip delayShow={1000} effect="solid" place="top" type="light" />
+				<header className={styles.header}>
+					<div />
+					<div className={styles["content-title"]}>
+						{editMode()}
+						<Image alt="Pencil icon" className={styles["pencil-icon"]} src={pencil} data-tip="Edit project tile" onClick={() => readonlyTitle && setReadonlyTitle(false)} />
+					</div>
+					<div className={styles.logout}>
+						<Image
+							alt="Logout icon"
+							data-tip="Logout"
+							src={logout}
+							onClick={logoutUser} 
+						/>
+					</div>
+				</header>
+				{haveProject && <p className={styles["colored-text"]}>Please complete your joined project before proceeding to others</p>}
+				{!project.displayUrl ?
+					<ReactLoading className={styles["tile-img-loading"]} type="spinningBubbles" color="#FFFFFF" />
+					:
+					<div className={styles.content}>
+						<div className={styles["tile-img-container"]}>
+							{project &&
 						<img
 							alt="Tile"
 							src={file ? URL.createObjectURL(file) : project.displayUrl}
 							className={styles["tile-img"]}
 						/>}
-						<p className={styles["counter-parts"]}>{project.currentSeq} of {project.tileCount}</p>
-					</div>
-
-					<div className={styles["art-container"]}>
-						<div className={styles["image-uploaded-container"]}>
-							<img
-								src={project.minimapUrl}
-								width="100%"
-								height="100%"
-								alt={`project-id-${project.projectId}`}
-							/>
+							<p className={styles["counter-parts"]}>{project.currentSeq} of {project.tileCount}</p>
 						</div>
-						<div className={styles["form-container"]}>
-							<div className={styles["download-upload-container"]}>
-								<label>
-									<Image
-										alt="Download button"
-										width="36px"
-										height="36px"
-										data-tip="Download tile"
-										className={styles["btn-container"]}
-										onClick={downloadFile}
-										type="file"
-										accept=".png"
-										src={download}
-									/>
-								</label>
 
-								<label htmlFor="file-input">
-									<Image
-										alt="Upload button"
-										width="36px"
-										height="36px"	
-										data-tip="Upload tile"
-										className={styles["btn-container"]}
-										src={upload}
-									/>
-									<input id="file-input" type="file" accept="image/png, image/tiff, image/jpeg" className={styles["file-input"]} onChange={(event) => {if(event.target.files[0]) setFile(event.target.files[0])}} />
-								</label>
+						<div className={styles["art-container"]}>
+							<div className={styles["image-uploaded-container"]}>
+								<img
+									src={project.minimapUrl}
+									width="100%"
+									height="100%"
+									alt={`project-id-${project.projectId}`}
+								/>
 							</div>
+							<div className={styles["form-container"]}>
+								<div className={styles["download-upload-container"]}>
+									<label>
+										<Image
+											alt="Download button"
+											width="36px"
+											height="36px"
+											data-tip="Download tile"
+											className={styles["btn-container"]}
+											onClick={downloadFile}
+											type="file"
+											accept=".png"
+											src={download}
+										/>
+									</label>
 
-							{/* <p className={styles["filename"]}>{file?.name}</p> */}
+									<label htmlFor="file-input">
+										<Image
+											alt="Upload button"
+											width="36px"
+											height="36px"	
+											data-tip="Upload tile"
+											className={styles["btn-container"]}
+											src={upload}
+										/>
+										<input id="file-input" type="file" accept="image/png, image/tiff, image/jpeg" className={styles["file-input"]} onChange={(event) => {if(event.target.files[0]) setFile(event.target.files[0])}} />
+									</label>
+								</div>
 
-							<div className={styles["unable-upload-container"]}>
-								{fileError && <p className={styles["unable-upload"]}> Please re-upload with original PNG format and dimensions. </p>}
+								{/* <p className={styles["filename"]}>{file?.name}</p> */}
+
+								<div className={styles["unable-upload-container"]}>
+									{fileError && <p className={styles["unable-upload"]}> Please re-upload with original PNG format and dimensions. </p>}
+								</div>
+
+								<button className={styles["done-btn"]} type="button" data-tip="Submit tile to project" onClick={uploadFile}>
+									{isLoading ? <ReactLoading className="loading" type="bubbles" color="#FFFFFF" /> : "Done"}
+								</button>
 							</div>
-
-							<button className={styles["done-btn"]} type="button" data-tip="Submit tile to project" onClick={uploadFile}>
-								{isLoading ? <ReactLoading className="loading" type="bubbles" color="#FFFFFF" /> : "Done"}
-							</button>
 						</div>
 					</div>
-				</div>
-			}
-		</div>
+				}
+			</div>
+		</>
 	)
 }

@@ -33,7 +33,7 @@ export default function Login() {
 			const config = { headers: { "Content-Type": "application/json" } }
 			const response = await axios.post(`${NEXT_PUBLIC_API_URL}/authentication/login`, body, config)
 			localStorage.setItem("userData", JSON.stringify(response.data))
-			if (response.data.hasInProgressProject) return router.push("/my-tiles")
+			if (response.data.hasInProgressProject) return router.push("projects/current-tile")
 			router.push("/projects")
 		} catch (error) {
 			const { data, status } = error.response || {}

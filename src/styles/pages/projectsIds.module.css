@@ -9,6 +9,14 @@
   cursor: pointer;
 }
 
+.colored-text {
+  color: #CD7A4E;
+  font-size: 28px;
+  padding-top: 40px;
+  margin-bottom: -40px;
+  text-align: center;
+}
+
 .container {
   background-color: #000000;
   color: white;
@@ -17,6 +25,10 @@
 }
 
 .content {
+  display: flex;
+}
+
+.content-title {
   display: flex;
 }
 
@@ -76,7 +88,7 @@
 
 .tile-img-container {
   width: 35vw;
-  margin-left: 35vw;
+  margin-left: 32.5vw;
 
   display: flex;
   flex-direction: column;
@@ -97,13 +109,22 @@
 
 .title {
   color: #FFF;
-  background: none;
-  border: none;
-  font-size: 24px;
-  text-overflow: ellipsis;
-  margin-right: 20px;
-  text-align: center;
+  font-size: 28px;
+  font-weight: 400;
+  margin: 0 5px 0 0;
 }
+
+.title-input {
+  color: #FFF;
+  background: none;
+  border-style: groove;
+  font-size: 28px;
+  font-weight: 400;
+  text-overflow: ellipsis;
+  text-align: center;
+  margin: 0 5px 0 0;
+}
+
 
 .unable-upload {
   color: #F5FF00;

@@ -44,11 +44,13 @@ export default function Modal({ setIsOpenedModal }) {
 				<p className={styles["resend-email-paragraph"]}> Your password email is on it’s way! Didn’t get it? Let’s try that again. </p>
 
 				<div className={styles["close-btn"]}>
-					<Image
-						alt="Close button"
-						src={closeBtn}
-						onClick={() => setIsOpenedModal(false)}
-					/>
+					<Link href="/">
+						<Image
+							alt="Close button"
+							src={closeBtn}
+							onClick={() => setIsOpenedModal(false)}
+						/>
+					</Link>
 				</div>
 			</div>
 
@@ -71,7 +73,7 @@ export default function Modal({ setIsOpenedModal }) {
 			</button>
 
 			<div className={styles["footer-form-resend-email"]}>
-				<p> Want to join this project? <strong>Click here</strong>. Otherwise, close this window or <Link href="/"><strong>Log in here</strong></Link>.</p>
+				<p>Or close this window and <Link href="/"><strong>Log in here</strong></Link>.</p>
 			</div>
 
 		</form>
