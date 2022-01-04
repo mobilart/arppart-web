@@ -93,6 +93,7 @@ export default function Projects({ haveProject }) {
 			?<h1 className={styles.title}>{title}</h1>
 			:<input
 				value={title}
+				maxLength="50"
 				onChange={(evt) => setTitle(evt.target.value)}
 				onBlur={closeEditMode}
 				className={styles["title-input"]}
