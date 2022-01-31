@@ -1,0 +1,10 @@
+.footer {
+  display: flex;
+  justify-content: space-between;
+  margin: 5vh auto 30px;
+  width: 165px;
+}
+
+.footer span {
+  cursor: pointer;
+}

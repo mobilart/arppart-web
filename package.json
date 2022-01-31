@@ -1,0 +1,27 @@
+{
+  "name": "arpp",
+  "author": "Gabriell Lucas",
+  "email": "gabriellluccas@gmail.com",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start -p 3000",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "axios": "^0.24.0",
+    "file-saver": "^2.0.5",
+    "next": "^12.0.7",
+    "react": "17.0.2",
+    "react-dom": "17.0.2",
+    "react-loading": "^2.0.3",
+    "react-simple-snackbar": "^1.1.11",
+    "react-tooltip": "^4.2.21",
+    "sharp": "^0.29.3"
+  },
+  "devDependencies": {
+    "eslint": "7.32.0",
+    "eslint-config-next": "12.0.4"
+  }
+}
